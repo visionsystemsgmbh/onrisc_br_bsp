@@ -1,0 +1,10 @@
+config BR2_PACKAGE_LIBONRISC
+	bool "libonrisc"
+	select BR2_PACKAGE_LIBSOC
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	help
+	  OnRISC hardware API
+
+comment "libonrisc requires a toolchain with threads support"
+	depends on !BR2_TOOLCHAIN_HAS_THREADS
+
