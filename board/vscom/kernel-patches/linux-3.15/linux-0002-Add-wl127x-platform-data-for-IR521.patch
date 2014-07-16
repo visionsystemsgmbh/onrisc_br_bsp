@@ -1,0 +1,42 @@
+From d81d0114bef386b43437fbbf39c2ec1504eb5b65 Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Mon, 14 Apr 2014 11:03:31 +0200
+Subject: [PATCH 3/6] Add wl127x platform data for IR521
+
+---
+ arch/arm/mach-omap2/pdata-quirks.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/pdata-quirks.c b/arch/arm/mach-omap2/pdata-quirks.c
+index c3b7335..ba6ff26 100644
+--- a/arch/arm/mach-omap2/pdata-quirks.c
++++ b/arch/arm/mach-omap2/pdata-quirks.c
+@@ -264,11 +264,17 @@ static struct iommu_platform_data omap4_iommu_pdata = {
+ };
+ #endif
+ 
++#define GPIO_TO_PIN(bank, gpio) (32 * (bank) + (gpio))
++
+ #ifdef CONFIG_SOC_AM33XX
+ static void __init am335x_evmsk_legacy_init(void)
+ {
+ 	legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 31);
+ }
++static void __init viavpn_legacy_init(void)
++{
++	legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, GPIO_TO_PIN(3, 7));
++}
+ #endif
+ 
+ #ifdef CONFIG_SOC_OMAP5
+@@ -370,6 +376,7 @@ static struct pdata_init pdata_quirks[] __initdata = {
+ #endif
+ #ifdef CONFIG_SOC_OMAP5
+ 	{ "ti,omap5-uevm", omap5_uevm_legacy_init, },
++	{ "vscom,onrisc", viavpn_legacy_init, },
+ #endif
+ 	{ /* sentinel */ },
+ };
+-- 
+1.7.7
+
