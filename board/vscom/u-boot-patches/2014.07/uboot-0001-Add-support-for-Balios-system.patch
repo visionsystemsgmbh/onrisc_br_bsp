@@ -1,4 +1,4 @@
-From ad6138c4b8dce10fa7c3daa79a603c92526bcacb Mon Sep 17 00:00:00 2001
+From c32ba02e814ceebbb87cc97ce59077971e2a5fe2 Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Balios system
@@ -1342,7 +1342,7 @@ index 1ba2081..66457f1 100644
  Active  arm         armv7          am33xx      BuR             tseries             tseries_nand                          tseries:SERIAL1,CONS_INDEX=1,NAND                                                                                                 Hannes Petermaier <hannes.petermaier@br-automation.com>
 diff --git a/include/configs/balios.h b/include/configs/balios.h
 new file mode 100644
-index 0000000..bb131f1
+index 0000000..e0cfd55
 --- /dev/null
 +++ b/include/configs/balios.h
 @@ -0,0 +1,329 @@
@@ -1416,7 +1416,7 @@ index 0000000..bb131f1
 +		"setenv loadaddr 0x81000000; " \
 +		"ubi part kernel; " \
 +		"ubifsmount ubi0:kernel; " \
-+		"ubifsload $loadaddr kernel-fit-balios-ir5221.itb;" \
++		"ubifsload $loadaddr kernel-fit.itb;" \
 +		"ubifsumount; " \
 +		"bootm $loadaddr\0"
 +#else
