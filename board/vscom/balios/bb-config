@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Busybox version: 1.22.1
-# Wed Jul 16 08:43:51 2014
+# Fri Jul 18 10:22:25 2014
 #
 CONFIG_HAVE_DOT_CONFIG=y
 
@@ -603,8 +603,8 @@ CONFIG_SETARCH=y
 CONFIG_SWAPONOFF=y
 # CONFIG_FEATURE_SWAPON_PRI is not set
 CONFIG_SWITCH_ROOT=y
-# CONFIG_UMOUNT is not set
-# CONFIG_FEATURE_UMOUNT_ALL is not set
+CONFIG_UMOUNT=y
+CONFIG_FEATURE_UMOUNT_ALL=y
 
 #
 # Common options for mount/umount
