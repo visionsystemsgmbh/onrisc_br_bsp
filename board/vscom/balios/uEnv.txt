@@ -1,4 +1,2 @@
-fitfdt=kernel-fit-balios-ir5221.itb
-optargs=quiet
-bootcmd=setenv loadaddr 0x82000000; run mmcargs; fatload mmc 0 ${loadaddr} kernel-fit-balios-ir5221.itb; bootm ${loadaddr};
+bootcmd=setenv loadaddr 0x82000000; run mmcargs; fatload mmc 0 ${loadaddr} kernel-fit.itb; bootm ${loadaddr};
 uenvcmd=boot
