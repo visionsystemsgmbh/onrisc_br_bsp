@@ -3,8 +3,8 @@
 # libonrisc
 #
 #############################################################
-LIBONRISC_VERSION = 1.1.0
-LIBONRISC_SITE = $(call github,yegorich,libonrisc,$(LIBONRISC_VERSION))
+LIBONRISC_VERSION = 1.3.0
+LIBONRISC_SITE = $(call github,visionsystemsgmbh,libonrisc,$(LIBONRISC_VERSION))
 LIBONRISC_DEPENDENCIES = libsoc eudev
 LIBONRISC_INSTALL_STAGING = YES
 
