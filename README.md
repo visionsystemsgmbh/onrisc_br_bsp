@@ -4,7 +4,7 @@ OnRISC Buildroot based BSP
 Installation
 ------------
 
-1. git clone https://github.com/yegorich/onrisc_br_bsp.git
+1. git clone https://github.com/visionsystemsgmbh/onrisc_br_bsp.git
 2. git clone http://git.buildroot.net/git/buildroot.git
 3. cd buildroot
 4. make BR2_EXTERNAL=../onrisc_br_bsp/ help
