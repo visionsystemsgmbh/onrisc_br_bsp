@@ -1,4 +1,4 @@
-From c32ba02e814ceebbb87cc97ce59077971e2a5fe2 Mon Sep 17 00:00:00 2001
+From 22e48f0a8ea2b18028e3d3854f7b13f290c810e3 Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Balios system
@@ -6,14 +6,14 @@ Subject: [PATCH] Add support for Balios system
 Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
 ---
  board/vscom/balios/Makefile   |   13 ++
- board/vscom/balios/README     |  186 ++++++++++++++++++
- board/vscom/balios/board.c    |  426 ++++++++++++++++++++++++++++++++++++++++
+ board/vscom/balios/README     |    1 +
+ board/vscom/balios/board.c    |  424 +++++++++++++++++++++++++++++++++++++++++
  board/vscom/balios/board.h    |   90 +++++++++
- board/vscom/balios/mux.c      |  427 +++++++++++++++++++++++++++++++++++++++++
- board/vscom/balios/u-boot.lds |  128 ++++++++++++
+ board/vscom/balios/mux.c      |  190 ++++++++++++++++++
+ board/vscom/balios/u-boot.lds |  128 +++++++++++++
  boards.cfg                    |    1 +
- include/configs/balios.h      |  329 +++++++++++++++++++++++++++++++
- 8 files changed, 1600 insertions(+), 0 deletions(-)
+ include/configs/balios.h      |  331 ++++++++++++++++++++++++++++++++
+ 8 files changed, 1178 insertions(+), 0 deletions(-)
  create mode 100644 board/vscom/balios/Makefile
  create mode 100644 board/vscom/balios/README
  create mode 100644 board/vscom/balios/board.c
@@ -43,202 +43,17 @@ index 0000000..804ac37
 +obj-y	+= board.o
 diff --git a/board/vscom/balios/README b/board/vscom/balios/README
 new file mode 100644
-index 0000000..2a30ab8
+index 0000000..f744ace
 --- /dev/null
 +++ b/board/vscom/balios/README
-@@ -0,0 +1,186 @@
-+Summary
-+=======
-+
-+This document covers various features of the 'am335x_evm' build, and some of
-+the related build targets (am335x_evm_uartN, etc).
-+
-+Hardware
-+========
-+
-+The binary produced by this board supports, based on parsing of the EEPROM
-+documented in TI's reference designs:
-+- AM335x GP EVM
-+- AM335x EVM SK
-+- Beaglebone White
-+- Beaglebone Black
-+
-+Customization
-+=============
-+
-+Given that all of the above boards are reference platforms (and the
-+Beaglebone platforms are OSHA), it is likely that this platform code and
-+configuration will be used as the basis of a custom platform.  It is
-+worth noting that aside from things such as NAND or MMC only being
-+required if a custom platform makes use of these blocks, the following
-+are required, depending on design:
-+
-+- GPIO is only required if DDR3 power is controlled in a way similar to
-+  EVM SK
-+- SPI is only required for SPI flash, or exposing the SPI bus.
-+
-+The following blocks are required:
-+- I2C, to talk with the PMIC and ensure that we do not run afoul of
-+  errata 1.0.24.
-+
-+When removing options as part of customization,
-+CONFIG_EXTRA_ENV_SETTINGS will need additional care to update for your
-+needs and to remove no longer relevant options as in some cases we
-+define additional text blocks (such as for NAND or DFU strings).  Also
-+note that all of the SPL options are grouped together, rather than with
-+the IP blocks, so both areas will need their choices updated to reflect
-+the custom design.
-+
-+NAND
-+====
-+
-+The AM335x GP EVM ships with a 256MiB NAND available in most profiles.  In
-+this example to program the NAND we assume that an SD card has been
-+inserted with the files to write in the first SD slot and that mtdparts
-+have been configured correctly for the board.  As a time saving measure we
-+load MLO into memory in one location, copy it into the three locatations
-+that the ROM checks for additional valid copies, then load U-Boot into
-+memory.  We then write that whole section of memory to NAND.
-+
-+U-Boot # mmc rescan
-+U-Boot # env default -f -a
-+U-Boot # nand erase.chip
-+U-Boot # saveenv
-+U-Boot # load mmc 0 81000000 MLO
-+U-Boot # cp.b 81000000 81020000 20000
-+U-Boot # cp.b 81000000 81040000 20000
-+U-Boot # cp.b 81000000 81060000 20000
-+U-Boot # load mmc 0 81080000 u-boot.img
-+U-Boot # nand write 81000000 0 260000
-+U-Boot # load mmc 0 ${loadaddr} uImage
-+U-Boot # nand write ${loadaddr} kernel 500000
-+
-+NOR
-+===
-+
-+The Beaglebone White can be equiped with a "memory cape" that in turn can
-+have a NOR module plugged into it.  In this case it is then possible to
-+program and boot from NOR.  Note that due to how U-Boot is architectured we
-+must build a specific version of U-Boot that knows we have NOR flash.  This
-+build is named 'am335x_evm_nor'.  Further, we have a 'am335x_evm_norboot'
-+build that will assume that the environment is on NOR rather than NAND.  In
-+the following example we assume that and SD card has been populated with
-+MLO and u-boot.img from a 'am335x_evm_nor' build and also contains the
-+'u-boot.bin' from a 'am335x_evm_norboot' build.  When booting from NOR, a
-+binary must be written to the start of NOR, with no header or similar
-+prepended.  In the following example we use a size of 512KiB (0x80000)
-+as that is how much space we set aside before the environment, as per
-+the config file.
-+
-+U-Boot # mmc rescan
-+U-Boot # load mmc 0 ${loadaddr} u-boot.bin
-+U-Boot # protect off 08000000 +80000
-+U-Boot # erase 08000000 +80000
-+U-Boot # cp.b ${loadaddr} 08000000 ${filesize}
-+
-+Falcon Mode
-+===========
-+
-+The default build includes "Falcon Mode" (see doc/README.falcon) via NAND,
-+eMMC (or raw SD cards) and FAT SD cards.  Our default behavior currently is
-+to read a 'c' on the console while in SPL at any point prior to loading the
-+OS payload (so as soon as possible) to opt to booting full U-Boot.  Also
-+note that while one can program Falcon Mode "in place" great care needs to
-+be taken by the user to not 'brick' their setup.  As these are all eval
-+boards with multiple boot methods, recovery should not be an issue in this
-+worst-case however.
-+
-+Falcon Mode: eMMC
-+=================
-+
-+The recommended layout in this case is:
-+
-+MMC BLOCKS      |--------------------------------| LOCATION IN BYTES
-+0x0000 - 0x007F : MBR or GPT table               : 0x000000 - 0x020000
-+0x0080 - 0x00FF : ARGS or FDT file               : 0x010000 - 0x020000
-+0x0100 - 0x01FF : SPL.backup1 (first copy used)  : 0x020000 - 0x040000
-+0x0200 - 0x02FF : SPL.backup2 (second copy used) : 0x040000 - 0x060000
-+0x0300 - 0x06FF : U-Boot                         : 0x060000 - 0x0e0000
-+0x0700 - 0x08FF : U-Boot Env + Redundant         : 0x0e0000 - 0x120000
-+0x0900 - 0x28FF : Kernel                         : 0x120000 - 0x520000
-+
-+Note that when we run 'spl export' it will prepare to boot the kernel.
-+This includes relocation of the uImage from where we loaded it to the entry
-+point defined in the header.  As these locations overlap by default, it
-+would leave us with an image that if written to MMC will not boot, so
-+instead of using the loadaddr variable we use 0x81000000 in the following
-+example.  In this example we are loading from the network, for simplicity,
-+and assume a valid partition table already exists and 'mmc dev' has already
-+been run to select the correct device.  Also note that if you previously
-+had a FAT partition (such as on a Beaglebone Black) it is not enough to
-+write garbage into the area, you must delete it from the partition table
-+first.
-+
-+# Ensure we are able to talk with this mmc device
-+U-Boot # mmc rescan
-+U-Boot # tftp 81000000 am335x/MLO
-+# Write to two of the backup locations ROM uses
-+U-Boot # mmc write 81000000 100 100
-+U-Boot # mmc write 81000000 200 100
-+# Write U-Boot to the location set in the config
-+U-Boot # tftp 81000000 am335x/u-boot.img
-+U-Boot # mmc write 81000000 300 400
-+# Load kernel and device tree into memory, perform export
-+U-Boot # tftp 81000000 am335x/uImage
-+U-Boot # run findfdt
-+U-Boot # tftp ${fdtaddr} am335x/${fdtfile}
-+U-Boot # run mmcargs
-+U-Boot # spl export fdt 81000000 - ${fdtaddr}
-+# Write the updated device tree to MMC
-+U-Boot # mmc write ${fdtaddr} 80 80
-+# Write the uImage to MMC
-+U-Boot # mmc write 81000000 900 2000
-+
-+Falcon Mode: FAT SD cards
-+=========================
-+
-+In this case the additional file is written to the filesystem.  In this
-+example we assume that the uImage and device tree to be used are already on
-+the FAT filesystem (only the uImage MUST be for this to function
-+afterwards) along with a Falcon Mode aware MLO and the FAT partition has
-+already been created and marked bootable:
-+
-+U-Boot # mmc rescan
-+# Load kernel and device tree into memory, perform export
-+U-Boot # load mmc 0:1 ${loadaddr} uImage
-+U-Boot # run findfdt
-+U-Boot # load mmc 0:1 ${fdtaddr} ${fdtfile}
-+U-Boot # run mmcargs
-+U-Boot # spl export fdt ${loadaddr} - ${fdtaddr}
-+
-+This will print a number of lines and then end with something like:
-+   Using Device Tree in place at 80f80000, end 80f85928
-+   Using Device Tree in place at 80f80000, end 80f88928
-+So then you:
-+
-+U-Boot # fatwrite mmc 0:1 0x80f80000 args 8928
-+
-+Falcon Mode: NAND
-+=================
-+
-+In this case the additional data is written to another partition of the
-+NAND.  In this example we assume that the uImage and device tree to be are
-+already located on the NAND somewhere (such as fileystem or mtd partition)
-+along with a Falcon Mode aware MLO written to the correct locations for
-+booting and mtdparts have been configured correctly for the board:
-+
-+U-Boot # nand read ${loadaddr} kernel
-+U-Boot # load nand rootfs ${fdtaddr} /boot/am335x-evm.dtb
-+U-Boot # run nandargs
-+U-Boot # spl export fdt ${loadaddr} - ${fdtaddr}
-+U-Boot # nand erase.part u-boot-spl-os
-+U-Boot # nand write ${fdtaddr} u-boot-spl-os
+@@ -0,0 +1 @@
++BSP for VScom OnRISC Balios family devices, like Balios iR 5221.
 diff --git a/board/vscom/balios/board.c b/board/vscom/balios/board.c
 new file mode 100644
-index 0000000..874f87f
+index 0000000..6aa91ee
 --- /dev/null
 +++ b/board/vscom/balios/board.c
-@@ -0,0 +1,426 @@
+@@ -0,0 +1,424 @@
 +/*
 + * board.c
 + *
@@ -408,7 +223,6 @@ index 0000000..874f87f
 +
 +	enable_i2c1_pin_mux();
 +	i2c_set_bus_num(1);
-+	i2c_init(CONFIG_SYS_OMAP24_I2C_SPEED, CONFIG_SYS_OMAP24_I2C_SLAVE);
 +
 +	return &dpll_ddr_bone_black;
 +}
@@ -439,7 +253,6 @@ index 0000000..874f87f
 +{
 +	enable_board_pin_mux();
 +}
-+
 +
 +const struct ctrl_ioregs ioregs_bonelt = {
 +	.cm0ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
@@ -534,7 +347,7 @@ index 0000000..874f87f
 +		return;
 +	}
 +
-+	printf("FDT was successfully setup\n");
++	printf("\nFDT was successfully setup\n");
 +}
 +#ifdef CONFIG_BOARD_LATE_INIT
 +int board_late_init(void)
@@ -763,10 +576,10 @@ index 0000000..1ae59a7
 +#endif
 diff --git a/board/vscom/balios/mux.c b/board/vscom/balios/mux.c
 new file mode 100644
-index 0000000..059618a
+index 0000000..bff1d5f
 --- /dev/null
 +++ b/board/vscom/balios/mux.c
-@@ -0,0 +1,427 @@
+@@ -0,0 +1,190 @@
 +/*
 + * mux.c
 + *
@@ -833,42 +646,7 @@ index 0000000..059618a
 +	{OFFSET(mmc0_dat0), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT0 */
 +	{OFFSET(mmc0_clk), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CLK */
 +	{OFFSET(mmc0_cmd), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CMD */
-+	{OFFSET(mcasp0_aclkr), (MODE(4) | RXACTIVE)},		/* MMC0_WP */
-+	{OFFSET(spi0_cs1), (MODE(5) | RXACTIVE | PULLUP_EN)},	/* MMC0_CD */
-+	{-1},
-+};
-+
-+static struct module_pin_mux mmc0_no_cd_pin_mux[] = {
-+	{OFFSET(mmc0_dat3), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT3 */
-+	{OFFSET(mmc0_dat2), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT2 */
-+	{OFFSET(mmc0_dat1), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT1 */
-+	{OFFSET(mmc0_dat0), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT0 */
-+	{OFFSET(mmc0_clk), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CLK */
-+	{OFFSET(mmc0_cmd), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CMD */
-+	{OFFSET(mcasp0_aclkr), (MODE(4) | RXACTIVE)},		/* MMC0_WP */
-+	{-1},
-+};
-+
-+static struct module_pin_mux mmc0_pin_mux_sk_evm[] = {
-+	{OFFSET(mmc0_dat3), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT3 */
-+	{OFFSET(mmc0_dat2), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT2 */
-+	{OFFSET(mmc0_dat1), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT1 */
-+	{OFFSET(mmc0_dat0), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_DAT0 */
-+	{OFFSET(mmc0_clk), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CLK */
-+	{OFFSET(mmc0_cmd), (MODE(0) | RXACTIVE | PULLUP_EN)},	/* MMC0_CMD */
 +	//{OFFSET(spi0_cs1), (MODE(5) | RXACTIVE | PULLUP_EN)},	/* MMC0_CD */
-+	{-1},
-+};
-+
-+static struct module_pin_mux mmc1_pin_mux[] = {
-+	{OFFSET(gpmc_ad3), (MODE(1) | RXACTIVE | PULLUP_EN)},	/* MMC1_DAT3 */
-+	{OFFSET(gpmc_ad2), (MODE(1) | RXACTIVE | PULLUP_EN)},	/* MMC1_DAT2 */
-+	{OFFSET(gpmc_ad1), (MODE(1) | RXACTIVE | PULLUP_EN)},	/* MMC1_DAT1 */
-+	{OFFSET(gpmc_ad0), (MODE(1) | RXACTIVE | PULLUP_EN)},	/* MMC1_DAT0 */
-+	{OFFSET(gpmc_csn1), (MODE(2) | RXACTIVE | PULLUP_EN)},	/* MMC1_CLK */
-+	{OFFSET(gpmc_csn2), (MODE(2) | RXACTIVE | PULLUP_EN)},	/* MMC1_CMD */
-+	{OFFSET(gpmc_csn0), (MODE(7) | RXACTIVE | PULLUP_EN)},	/* MMC1_WP */
-+	{OFFSET(gpmc_advn_ale), (MODE(7) | RXACTIVE | PULLUP_EN)},	/* MMC1_CD */
 +	{-1},
 +};
 +
@@ -888,36 +666,8 @@ index 0000000..059618a
 +	{-1},
 +};
 +
-+static struct module_pin_mux spi0_pin_mux[] = {
-+	{OFFSET(spi0_sclk), (MODE(0) | RXACTIVE | PULLUDEN)},	/* SPI0_SCLK */
-+	{OFFSET(spi0_d0), (MODE(0) | RXACTIVE |
-+			PULLUDEN | PULLUP_EN)},			/* SPI0_D0 */
-+	{OFFSET(spi0_d1), (MODE(0) | RXACTIVE | PULLUDEN)},	/* SPI0_D1 */
-+	{OFFSET(spi0_cs0), (MODE(0) | RXACTIVE |
-+			PULLUDEN | PULLUP_EN)},			/* SPI0_CS0 */
-+	{-1},
-+};
-+
 +static struct module_pin_mux gpio0_7_pin_mux[] = {
 +	{OFFSET(ecap0_in_pwm0_out), (MODE(7) | PULLUDEN)},	/* GPIO0_7 */
-+	{-1},
-+};
-+
-+static struct module_pin_mux rgmii1_pin_mux[] = {
-+	{OFFSET(mii1_txen), MODE(2)},			/* RGMII1_TCTL */
-+	{OFFSET(mii1_rxdv), MODE(2) | RXACTIVE},	/* RGMII1_RCTL */
-+	{OFFSET(mii1_txd3), MODE(2)},			/* RGMII1_TD3 */
-+	{OFFSET(mii1_txd2), MODE(2)},			/* RGMII1_TD2 */
-+	{OFFSET(mii1_txd1), MODE(2)},			/* RGMII1_TD1 */
-+	{OFFSET(mii1_txd0), MODE(2)},			/* RGMII1_TD0 */
-+	{OFFSET(mii1_txclk), MODE(2)},			/* RGMII1_TCLK */
-+	{OFFSET(mii1_rxclk), MODE(2) | RXACTIVE},	/* RGMII1_RCLK */
-+	{OFFSET(mii1_rxd3), MODE(2) | RXACTIVE},	/* RGMII1_RD3 */
-+	{OFFSET(mii1_rxd2), MODE(2) | RXACTIVE},	/* RGMII1_RD2 */
-+	{OFFSET(mii1_rxd1), MODE(2) | RXACTIVE},	/* RGMII1_RD1 */
-+	{OFFSET(mii1_rxd0), MODE(2) | RXACTIVE},	/* RGMII1_RD0 */
-+	{OFFSET(mdio_data), MODE(0) | RXACTIVE | PULLUP_EN},/* MDIO_DATA */
-+	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
 +	{-1},
 +};
 +
@@ -952,25 +702,6 @@ index 0000000..059618a
 +	{-1},
 +};
 +
-+static struct module_pin_mux mii1_pin_mux[] = {
-+	{OFFSET(mii1_rxerr), MODE(0) | RXACTIVE},	/* MII1_RXERR */
-+	{OFFSET(mii1_txen), MODE(0)},			/* MII1_TXEN */
-+	{OFFSET(mii1_rxdv), MODE(0) | RXACTIVE},	/* MII1_RXDV */
-+	{OFFSET(mii1_txd3), MODE(0)},			/* MII1_TXD3 */
-+	{OFFSET(mii1_txd2), MODE(0)},			/* MII1_TXD2 */
-+	{OFFSET(mii1_txd1), MODE(0)},			/* MII1_TXD1 */
-+	{OFFSET(mii1_txd0), MODE(0)},			/* MII1_TXD0 */
-+	{OFFSET(mii1_txclk), MODE(0) | RXACTIVE},	/* MII1_TXCLK */
-+	{OFFSET(mii1_rxclk), MODE(0) | RXACTIVE},	/* MII1_RXCLK */
-+	{OFFSET(mii1_rxd3), MODE(0) | RXACTIVE},	/* MII1_RXD3 */
-+	{OFFSET(mii1_rxd2), MODE(0) | RXACTIVE},	/* MII1_RXD2 */
-+	{OFFSET(mii1_rxd1), MODE(0) | RXACTIVE},	/* MII1_RXD1 */
-+	{OFFSET(mii1_rxd0), MODE(0) | RXACTIVE},	/* MII1_RXD0 */
-+	{OFFSET(mdio_data), MODE(0) | RXACTIVE | PULLUP_EN}, /* MDIO_DATA */
-+	{OFFSET(mdio_clk), MODE(0) | PULLUP_EN},	/* MDIO_CLK */
-+	{-1},
-+};
-+
 +static struct module_pin_mux nand_pin_mux[] = {
 +	{OFFSET(gpmc_ad0), (MODE(0) | PULLUP_EN | RXACTIVE)},	/* NAND AD0 */
 +	{OFFSET(gpmc_ad1), (MODE(0) | PULLUP_EN | RXACTIVE)},	/* NAND AD1 */
@@ -989,75 +720,6 @@ index 0000000..059618a
 +	{OFFSET(gpmc_be0n_cle), (MODE(0) | PULLUDEN)},	/* NAND_BE_CLE */
 +	{-1},
 +};
-+
-+#if defined(CONFIG_NOR) && !defined(CONFIG_NOR_BOOT)
-+static struct module_pin_mux bone_norcape_pin_mux[] = {
-+	{OFFSET(lcd_data0), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A0 */
-+	{OFFSET(lcd_data1), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A1 */
-+	{OFFSET(lcd_data2), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A2 */
-+	{OFFSET(lcd_data3), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A3 */
-+	{OFFSET(lcd_data4), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A4 */
-+	{OFFSET(lcd_data5), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A5 */
-+	{OFFSET(lcd_data6), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A6 */
-+	{OFFSET(lcd_data7), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A7 */
-+	{OFFSET(lcd_vsync), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A8 */
-+	{OFFSET(lcd_hsync), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A9 */
-+	{OFFSET(lcd_pclk), MODE(1)| PULLUDEN | RXACTIVE},       /* NOR_A10 */
-+	{OFFSET(lcd_ac_bias_en), MODE(1)| PULLUDEN | RXACTIVE}, /* NOR_A11 */
-+	{OFFSET(lcd_data8), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A12 */
-+	{OFFSET(lcd_data9), MODE(1) | PULLUDEN | RXACTIVE},     /* NOR_A13 */
-+	{OFFSET(lcd_data10), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A14 */
-+	{OFFSET(lcd_data11), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A15 */
-+	{OFFSET(lcd_data12), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A16 */
-+	{OFFSET(lcd_data13), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A17 */
-+	{OFFSET(lcd_data14), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A18 */
-+	{OFFSET(lcd_data15), MODE(1) | PULLUDEN | RXACTIVE},    /* NOR_A19 */
-+	{OFFSET(gpmc_ad0), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD0 */
-+	{OFFSET(gpmc_ad1), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD1 */
-+	{OFFSET(gpmc_ad2), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD2 */
-+	{OFFSET(gpmc_ad3), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD3 */
-+	{OFFSET(gpmc_ad4), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD4 */
-+	{OFFSET(gpmc_ad5), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD5 */
-+	{OFFSET(gpmc_ad6), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD6 */
-+	{OFFSET(gpmc_ad7), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD7 */
-+	{OFFSET(gpmc_ad8), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD8 */
-+	{OFFSET(gpmc_ad9), MODE(0) | PULLUDEN | RXACTIVE},      /* NOR_AD9 */
-+	{OFFSET(gpmc_ad10), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD10 */
-+	{OFFSET(gpmc_ad11), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD11 */
-+	{OFFSET(gpmc_ad12), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD12 */
-+	{OFFSET(gpmc_ad13), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD13 */
-+	{OFFSET(gpmc_ad14), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD14 */
-+	{OFFSET(gpmc_ad15), MODE(0) | PULLUDEN | RXACTIVE},     /* NOR_AD15 */
-+
-+	{OFFSET(gpmc_csn0), (MODE(0) | PULLUDEN) | RXACTIVE},   /* NOR_CE */
-+	{OFFSET(gpmc_advn_ale), (MODE(0) | PULLUDEN) | RXACTIVE}, /* NOR_ADVN_ALE */
-+	{OFFSET(gpmc_oen_ren), (MODE(0) | PULLUDEN | RXACTIVE)},/* NOR_OE */
-+	{OFFSET(gpmc_be0n_cle), (MODE(0) | PULLUDEN | RXACTIVE)},/* NOR_BE0N_CLE */
-+	{OFFSET(gpmc_wen), (MODE(0) | PULLUDEN | RXACTIVE)},    /* NOR_WEN */
-+	{OFFSET(gpmc_wait0), (MODE(0) | RXACTIVE | PULLUDEN)}, /* NOR WAIT */
-+	{-1},
-+};
-+#endif
-+
-+#if defined(CONFIG_NOR_BOOT)
-+static struct module_pin_mux norboot_pin_mux[] = {
-+	{OFFSET(lcd_data1), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data2), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data3), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data4), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data5), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data6), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data7), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data8), MODE(1) | PULLUDDIS},
-+	{OFFSET(lcd_data9), MODE(1) | PULLUDDIS},
-+	{-1},
-+};
-+
-+void enable_norboot_pin_mux(void)
-+{
-+	configure_module_pin_mux(norboot_pin_mux);
-+}
-+#endif
 +
 +void enable_uart0_pin_mux(void)
 +{
@@ -1096,103 +758,17 @@ index 0000000..059618a
 +
 +void enable_i2c1_pin_mux(void)
 +{
-+	printf("enable_i2c1_pin_mux\n");
 +	configure_module_pin_mux(i2c1_pin_mux);
-+}
-+
-+/*
-+ * The AM335x GP EVM, if daughter card(s) are connected, can have 8
-+ * different profiles.  These profiles determine what peripherals are
-+ * valid and need pinmux to be configured.
-+ */
-+#define PROFILE_NONE	0x0
-+#define PROFILE_0	(1 << 0)
-+#define PROFILE_1	(1 << 1)
-+#define PROFILE_2	(1 << 2)
-+#define PROFILE_3	(1 << 3)
-+#define PROFILE_4	(1 << 4)
-+#define PROFILE_5	(1 << 5)
-+#define PROFILE_6	(1 << 6)
-+#define PROFILE_7	(1 << 7)
-+#define PROFILE_MASK	0x7
-+#define PROFILE_ALL	0xFF
-+
-+/* CPLD registers */
-+#define I2C_CPLD_ADDR	0x35
-+#define CFG_REG		0x10
-+
-+static unsigned short detect_daughter_board_profile(void)
-+{
-+	unsigned short val;
-+
-+	if (i2c_probe(I2C_CPLD_ADDR))
-+		return PROFILE_NONE;
-+
-+	if (i2c_read(I2C_CPLD_ADDR, CFG_REG, 1, (unsigned char *)(&val), 2))
-+		return PROFILE_NONE;
-+
-+	return (1 << (val & PROFILE_MASK));
 +}
 +
 +void enable_board_pin_mux()
 +{
-+#if 0
-+	/* Do board-specific muxes. */
-+	if (board_is_bone(header)) {
-+		/* Beaglebone pinmux */
-+		configure_module_pin_mux(i2c1_pin_mux);
-+		configure_module_pin_mux(mii1_pin_mux);
-+		configure_module_pin_mux(mmc0_pin_mux);
-+#ifndef CONFIG_NOR
-+		configure_module_pin_mux(mmc1_pin_mux);
-+#endif
-+#if defined(CONFIG_NOR) && !defined(CONFIG_NOR_BOOT)
-+		configure_module_pin_mux(bone_norcape_pin_mux);
-+#endif
-+	} else if (board_is_gp_evm(header)) {
-+		/* General Purpose EVM */
-+		unsigned short profile = detect_daughter_board_profile();
-+		configure_module_pin_mux(rgmii1_pin_mux);
-+		configure_module_pin_mux(mmc0_pin_mux);
-+		/* In profile #2 i2c1 and spi0 conflict. */
-+		if (profile & ~PROFILE_2)
-+			configure_module_pin_mux(i2c1_pin_mux);
-+		/* Profiles 2 & 3 don't have NAND */
-+		if (profile & ~(PROFILE_2 | PROFILE_3))
-+			configure_module_pin_mux(nand_pin_mux);
-+		else if (profile == PROFILE_2) {
-+			configure_module_pin_mux(mmc1_pin_mux);
-+			configure_module_pin_mux(spi0_pin_mux);
-+		}
-+	} else if (board_is_idk(header)) {
-+		/*
-+		 * Industrial Motor Control (IDK)
-+		 * note: IDK console is on UART3 by default.
-+		 *       So u-boot mus be build with CONFIG_SERIAL4 and
-+		 *       CONFIG_CONS_INDEX=4
-+		 */
-+		configure_module_pin_mux(mii1_pin_mux);
-+		configure_module_pin_mux(mmc0_no_cd_pin_mux);
-+	} else if (board_is_evm_sk(header)) {
-+#endif
-+		/* Starter Kit EVM */
++		/* Balios */
 +		configure_module_pin_mux(i2c1_pin_mux);
 +		configure_module_pin_mux(gpio0_7_pin_mux);
 +		configure_module_pin_mux(rgmii2_pin_mux);
 +		configure_module_pin_mux(rmii1_pin_mux);
-+		configure_module_pin_mux(mmc0_pin_mux_sk_evm);
-+#if 0
-+	} else if (board_is_bone_lt(header)) {
-+		/* Beaglebone LT pinmux */
-+		configure_module_pin_mux(i2c1_pin_mux);
-+		configure_module_pin_mux(mii1_pin_mux);
 +		configure_module_pin_mux(mmc0_pin_mux);
-+		configure_module_pin_mux(mmc1_pin_mux);
-+	} else {
-+		puts("Unknown board, cannot configure pinmux.");
-+		hang();
-+	}
-+#endif
 +}
 diff --git a/board/vscom/balios/u-boot.lds b/board/vscom/balios/u-boot.lds
 new file mode 100644
@@ -1342,10 +918,10 @@ index 1ba2081..66457f1 100644
  Active  arm         armv7          am33xx      BuR             tseries             tseries_nand                          tseries:SERIAL1,CONS_INDEX=1,NAND                                                                                                 Hannes Petermaier <hannes.petermaier@br-automation.com>
 diff --git a/include/configs/balios.h b/include/configs/balios.h
 new file mode 100644
-index 0000000..e0cfd55
+index 0000000..c07c163
 --- /dev/null
 +++ b/include/configs/balios.h
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,331 @@
 +/*
 + * am335x_evm.h
 + *
@@ -1399,6 +975,10 @@ index 0000000..e0cfd55
 +#define CONFIG_LZO
 +#define CONFIG_CMD_UBI
 +#define CONFIG_CMD_UBIFS
++
++/* I2C configuration */
++#undef CONFIG_SYS_OMAP24_I2C_SPEED
++#define CONFIG_SYS_OMAP24_I2C_SPEED 10000
 +
 +#ifdef CONFIG_NAND
 +#define NANDARGS \
@@ -1565,9 +1145,9 @@ index 0000000..e0cfd55
 +/*#define CONFIG_SPL_MUSB_NEW_SUPPORT*/
 +
 +/* General network SPL, both CPSW and USB gadget RNDIS */
-+#define CONFIG_SPL_NET_SUPPORT
++/*#define CONFIG_SPL_NET_SUPPORT
 +#define CONFIG_SPL_ENV_SUPPORT
-+#define CONFIG_SPL_NET_VCI_STRING	"AM335x U-Boot SPL"
++#define CONFIG_SPL_NET_VCI_STRING	"AM335x U-Boot SPL"*/
 +
 +#define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/am33xx/u-boot-spl.lds"
 +
@@ -1668,9 +1248,7 @@ index 0000000..e0cfd55
 +					"128k(SPL.backup3)," \
 +					"1920k(u-boot)," \
 +					"64m(kernel),-(rootfs)"
-+#define CONFIG_ENV_IS_IN_NAND
-+#define CONFIG_ENV_OFFSET		0x260000 /* environment starts here */
-+#define CONFIG_SYS_ENV_SECT_SIZE	(128 << 10)	/* 128 KiB */
++#define CONFIG_ENV_IS_NOWHERE
 +#endif
 +#endif
 +
