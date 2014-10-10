@@ -1,4 +1,4 @@
-From 02903531faea197d3563dcb5121d5ac7a422a23b Mon Sep 17 00:00:00 2001
+From cd8dbd8c9c0d6fc26cc7410b336fb38b7eb35779 Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Balios system
@@ -938,7 +938,7 @@ index 1ba2081..66457f1 100644
  Active  arm         armv7          am33xx      BuR             tseries             tseries_nand                          tseries:SERIAL1,CONS_INDEX=1,NAND                                                                                                 Hannes Petermaier <hannes.petermaier@br-automation.com>
 diff --git a/include/configs/balios.h b/include/configs/balios.h
 new file mode 100644
-index 0000000..6062929
+index 0000000..b3cb783
 --- /dev/null
 +++ b/include/configs/balios.h
 @@ -0,0 +1,331 @@
@@ -1018,7 +1018,7 @@ index 0000000..6062929
 +		"ubifsmount ubi0:kernel; " \
 +		"ubifsload $loadaddr kernel-fit.itb;" \
 +		"ubifsumount; " \
-+		"bootm $loadaddr\0"
++		"bootm ${loadaddr}#conf${board_name}\0"
 +#else
 +#define NANDARGS ""
 +#endif
