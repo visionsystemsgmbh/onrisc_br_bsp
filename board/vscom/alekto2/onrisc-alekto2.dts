@@ -42,6 +42,12 @@
 };
 
 &am33xx_pinmux {
+        tca6416_pins: pinmux_tca6416_pins {
+                pinctrl-single,pins = <
+                        0x15c (PIN_INPUT_PULLUP | MUX_MODE7)      /* spi0_cs0.gpio0[5] tca6416 IRQ line */
+                >;
+        };
+
 	i2c0_pins: pinmux_i2c0_pins {
 		pinctrl-single,pins = <
 			0x188 (PIN_INPUT_PULLUP | MUX_MODE0)	/* i2c0_sda.i2c0_sda */
@@ -211,15 +217,23 @@
 		reg = <0x50>;
 	};
 
-/*
 	tca6416: gpio@20 {
 		compatible = "ti,tca6416";
 		reg = <0x20>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		interrupt-parent = <&gpio0>;
-		interrupts = <20 GPIO_ACTIVE_LOW>;
-	};*/
+		interrupts = <5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tca6416_pins>;
+	};
+
+	tca6416_pb: gpio@21 {
+		compatible = "ti,tca6416";
+		reg = <0x21>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
 };
 
 &cppi41dma  {
