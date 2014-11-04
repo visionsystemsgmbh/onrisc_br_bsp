@@ -48,6 +48,12 @@
                 >;
         };
 
+	tps65910_pins: pinmux_tps65910_pins {
+		pinctrl-single,pins = <
+			0x1b0 (PIN_INPUT_PULLUP | MUX_MODE7)      /* xdma_event_intr0.gpio0[19] */
+		>;
+	};
+
 	i2c0_pins: pinmux_i2c0_pins {
 		pinctrl-single,pins = <
 			0x188 (PIN_INPUT_PULLUP | MUX_MODE0)	/* i2c0_sda.i2c0_sda */
@@ -209,6 +215,12 @@
 
 	tps: tps@2d {
 		reg = <0x2d>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <19 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tps65910_pins>;
 	};
 
 	at24@50 {
