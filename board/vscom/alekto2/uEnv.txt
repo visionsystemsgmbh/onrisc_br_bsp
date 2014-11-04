@@ -1,0 +1,3 @@
+#bootargs=video=da8xx_lcdc:1024x768@60
+bootcmd=fatload mmc 0 82000000 uImage; fatload mmc 0 80000000 onrisc-alekto2.dtb; fdt addr 80000000; fdt resize; bootm 82000000 - 80000000
+uenvcmd=boot
