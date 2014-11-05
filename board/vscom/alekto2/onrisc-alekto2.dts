@@ -289,6 +289,8 @@
 	vcc7-supply = <&vbat>;
 	vccio-supply = <&vbat>;
 
+	ti,en-ck32k-xtal = <1>;
+
 	regulators {
 		vrtc_reg: regulator@0 {
 			regulator-always-on;
