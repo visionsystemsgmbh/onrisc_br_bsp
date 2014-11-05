@@ -1,0 +1,26 @@
+From 5128340e0f84a6aecfda8143b0e72043a3fb0749 Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Wed, 5 Nov 2014 10:10:31 +0100
+Subject: [PATCH] Ignore write-protect flag
+
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+ drivers/scsi/sd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index cfba74c..10c0351 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2355,7 +2355,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		sd_first_printk(KERN_WARNING, sdkp,
+ 			  "Test WP failed, assume Write Enabled\n");
+ 	} else {
+-		sdkp->write_prot = ((data.device_specific & 0x80) != 0);
++		sdkp->write_prot = 0;
+ 		set_disk_ro(sdkp->disk, sdkp->write_prot);
+ 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
+ 			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
+-- 
+1.7.7
+
