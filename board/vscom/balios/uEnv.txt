@@ -1,2 +1,2 @@
-bootcmd=setenv loadaddr 0x82000000; run mmcargs; fatload mmc 0 ${loadaddr} kernel-fit.itb; bootm ${loadaddr};
+bootcmd=setenv loadaddr 0x82000000; run mmcargs; fatload mmc 0 ${loadaddr} kernel-fit.itb; bootm ${loadaddr}#conf${board_name};
 uenvcmd=boot
