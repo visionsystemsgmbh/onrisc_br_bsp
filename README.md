@@ -9,11 +9,11 @@ Installation
 3. cd buildroot
 4. make BR2_EXTERNAL=../onrisc_br_bsp/ help
 
-Now you can choose a default config for desired device. For example Balios:
+Now you can choose a default config for desired device. For example Baltos:
 
-make balios_defconfig
+make baltos_defconfig
 
-Invoking make would compile the whole set of images from bootloader till root file system.
+Invoking make would compile the whole set of images from bootloader till root file system. You'll find binaris under `output/images` folder.
 
 Related Links
 -------------

@@ -7,7 +7,7 @@
  */
 
 /*
- * viaVPN Router
+ * VScom OnRISC
  * http://www.vscom.de
  */
 
@@ -17,7 +17,7 @@
 #include <dt-bindings/pwm/pwm.h>
 
 / {
-	model = "OnRISC Balios iR 3220";
+	model = "OnRISC Baltos iR 3220";
 	compatible = "vscom,onrisc", "ti,am33xx";
 
 	cpus {

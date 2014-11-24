@@ -17,7 +17,7 @@
 #include <dt-bindings/pwm/pwm.h>
 
 / {
-	model = "OnRISC Balios DIO 1080";
+	model = "OnRISC Baltos DIO 1080";
 	compatible = "vscom,onrisc", "ti,am33xx";
 
 	cpus {
