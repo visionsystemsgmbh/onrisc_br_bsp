@@ -268,37 +268,6 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		elm_id = <&elm>;
-
-		/* MTD partition table */
-		partition@0 {
-			label = "MLO";
-			reg = <0x00000000 0x000020000>;
-		};
-
-		partition@1 {
-			label = "U-boot";
-			reg = <0x00020000 0x001e0000>;
-		};
-
-		partition@2 {
-			label = "DTB";
-			reg = <0x00200000 0x000020000>;
-		};
-
-		partition@3 {
-			label = "environment";
-			reg = <0x00220000 0x000020000>;
-		};
-
-		partition@4 {
-			label = "Kernel";
-			reg = <0x00240000 0x00600000>;
-		};
-
-		partition@5 {
-			label = "File-System";
-			reg = <0x00840000 0x0C360000>;
-		};
 	};
 };
 
