@@ -13,7 +13,7 @@ Now you can choose a default config for desired device. For example Baltos:
 
 make baltos_defconfig
 
-Invoking make would compile the whole set of images from bootloader till root file system. You'll find binaris under `output/images` folder.
+Invoking make would compile the whole set of images from bootloader till root file system. You'll find binaries under `output/images` folder.
 
 Related Links
 -------------
