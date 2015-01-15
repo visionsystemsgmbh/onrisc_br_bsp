@@ -105,10 +105,10 @@
 
 	uart1_pins: pinmux_uart1_pins {
 		pinctrl-single,pins = <
-			/*0x178 0x28*/      /* uart1_ctsn, INPUT | MODE0 */
-			/*0x17c 0x08*/      /* uart1_rtsn, OUTPUT | MODE0 */
 			0x180 0x28      /* uart1_rxd, INPUT | MODE0 */
 			0x184 0x28      /* uart1_txd, INPUT | MODE0 */
+			/*0x178 0x28*/      /* uart1_ctsn, INPUT | MODE0 */
+			/*0x17c 0x08*/      /* uart1_rtsn, OUTPUT | MODE0 */
 			0x178 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* uart1_ctsn, INPUT | MODE0 */
 			0x17c (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* uart1_rtsn, OUTPUT | MODE0 */
 			0x0e0 (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* lcd_vsync.gpio2[22] DTR */
@@ -122,12 +122,15 @@
 		pinctrl-single,pins = <
 			0x150 0x29      /* spi0_sclk.uart2_rxd_mux3, INPUT | MODE1 */
 			0x154 0x09      /* spi0_d0.uart2_txd_mux3, OUTPUT | MODE1 */
-			0x188 0x2a      /* i2c0_sda.uart2_ctsn_mux0, INPUT | MODE2 */
-			0x18c 0x2a      /* i2c0_scl.uart2_rtsn_mux0, INPUT | MODE2 */
+			/*0x188 0x2a*/      /* i2c0_sda.uart2_ctsn_mux0, INPUT | MODE2 */
+			/*0x18c 0x2a*/      /* i2c0_scl.uart2_rtsn_mux0, INPUT | MODE2 */
+			0x188 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* i2c0_sda.uart2_ctsn_mux0 */
+			0x18c (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* i2c0_scl.uart2_rtsn_mux0 */
 			0x030 (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad12.gpio1[12] DTR */
 			0x034 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad13.gpio1[13] DSR */
 			0x038 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad14.gpio1[14] DCD */
 			0x03c (PIN_INPUT_PULLDOWN | MUX_MODE7)     /* gpmc_ad15.gpio1[15] RI */
+
 			0x1a0 (PIN_INPUT_PULLUP | MUX_MODE7)      /* mcasp0_aclkr.gpio3[18], INPUT_PULLDOWN | MODE7 */
 		>;
 	};
@@ -288,12 +291,6 @@
 	cts-gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
 	rts-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
 
-	/* No extra delay after/before transmissions */
-	rs485-rts-delay = <0 0>;
-	
-	/* Enable RS-485 */
-	/*linux,rs485-enabled-at-boot-time;*/
-
 	status = "okay";
 };
 
@@ -304,6 +301,8 @@
 	dsr-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
 	dcd-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
 	rng-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpio3 5 GPIO_ACTIVE_LOW>;
+	rts-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
 
 	status = "okay";
 };
