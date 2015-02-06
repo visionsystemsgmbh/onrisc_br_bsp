@@ -1,19 +1,20 @@
-From cadeaa02b90b5b7e5be0c2d2c75dae2c81b4d254 Mon Sep 17 00:00:00 2001
+From 77a496c4c45fd9d90ec28710439ccded162599cb Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Baltos system
 
 Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
 ---
- board/vscom/baltos/Makefile   |   13 +
- board/vscom/baltos/README     |    1 +
- board/vscom/baltos/board.c    |  485 +++++++++++++++++++++++++++++++++++++++++
- board/vscom/baltos/board.h    |   90 ++++++++
- board/vscom/baltos/mux.c      |  190 ++++++++++++++++
- board/vscom/baltos/u-boot.lds |  128 +++++++++++
- boards.cfg                    |    1 +
- include/configs/baltos.h      |  331 ++++++++++++++++++++++++++++
- 8 files changed, 1239 insertions(+), 0 deletions(-)
+ arch/arm/include/asm/arch-am33xx/hardware_am33xx.h |    3 +
+ board/vscom/baltos/Makefile                        |   13 +
+ board/vscom/baltos/README                          |    1 +
+ board/vscom/baltos/board.c                         |  487 ++++++++++++++++++++
+ board/vscom/baltos/board.h                         |   90 ++++
+ board/vscom/baltos/mux.c                           |  190 ++++++++
+ board/vscom/baltos/u-boot.lds                      |  128 +++++
+ boards.cfg                                         |    1 +
+ include/configs/baltos.h                           |  331 +++++++++++++
+ 9 files changed, 1244 insertions(+), 0 deletions(-)
  create mode 100644 board/vscom/baltos/Makefile
  create mode 100644 board/vscom/baltos/README
  create mode 100644 board/vscom/baltos/board.c
@@ -22,6 +23,18 @@ Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
  create mode 100644 board/vscom/baltos/u-boot.lds
  create mode 100644 include/configs/baltos.h
 
+diff --git a/arch/arm/include/asm/arch-am33xx/hardware_am33xx.h b/arch/arm/include/asm/arch-am33xx/hardware_am33xx.h
+index c67a080..5894ad6 100644
+--- a/arch/arm/include/asm/arch-am33xx/hardware_am33xx.h
++++ b/arch/arm/include/asm/arch-am33xx/hardware_am33xx.h
+@@ -67,4 +67,7 @@
+ #define PWMSS0_BASE			0x48300000
+ #define AM33XX_ECAP0_BASE		0x48300100
+ 
++/* PRM */
++#define PRM_DEVICE_INST                 0x44E00F00
++
+ #endif /* __AM33XX_HARDWARE_AM33XX_H */
 diff --git a/board/vscom/baltos/Makefile b/board/vscom/baltos/Makefile
 new file mode 100644
 index 0000000..804ac37
@@ -50,10 +63,10 @@ index 0000000..f744ace
 +BSP for VScom OnRISC Balios family devices, like Balios iR 5221.
 diff --git a/board/vscom/baltos/board.c b/board/vscom/baltos/board.c
 new file mode 100644
-index 0000000..572f9e3
+index 0000000..84eecaa
 --- /dev/null
 +++ b/board/vscom/baltos/board.c
-@@ -0,0 +1,485 @@
+@@ -0,0 +1,487 @@
 +/*
 + * board.c
 + *
@@ -266,6 +279,8 @@ index 0000000..572f9e3
 +
 +	/* Set MPU Frequency to what we detected now that voltages are set */
 +	do_setup_dpll(&dpll_mpu_regs, &dpll_mpu_opp100);
++
++	writel(0x000010ff, PRM_DEVICE_INST + 4);
 +}
 +
 +const struct dpll_params *get_dpll_ddr_params(void)
@@ -979,7 +994,7 @@ index 1ba2081..497ae50 100644
  Active  arm         armv7          am33xx      BuR             tseries             tseries_nand                          tseries:SERIAL1,CONS_INDEX=1,NAND                                                                                                 Hannes Petermaier <hannes.petermaier@br-automation.com>
 diff --git a/include/configs/baltos.h b/include/configs/baltos.h
 new file mode 100644
-index 0000000..647b014
+index 0000000..1b144bd
 --- /dev/null
 +++ b/include/configs/baltos.h
 @@ -0,0 +1,331 @@
@@ -1054,7 +1069,7 @@ index 0000000..647b014
 +	"nandrootfstype=ubifs rootwait=1\0" \
 +	"nandboot=echo Booting from nand ...; " \
 +		"run nandargs; " \
-+		"setenv loadaddr 0x81000000; " \
++		"setenv loadaddr 0x84000000; " \
 +		"ubi part UBI; " \
 +		"ubifsmount ubi0:kernel; " \
 +		"ubifsload $loadaddr kernel-fit.itb;" \
