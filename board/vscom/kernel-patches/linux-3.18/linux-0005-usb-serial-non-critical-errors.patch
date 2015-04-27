@@ -1,0 +1,35 @@
+From aa8e22128b40590b291cd13512098bf258a7e6c5 Mon Sep 17 00:00:00 2001
+From: Jeremiah Mahler <jmmahler@gmail.com>
+Date: Sun, 11 Jan 2015 05:42:06 -0800
+Subject: usb: serial: silence all non-critical read errors
+
+If a USB serial device is unplugged while there is an active program
+using the device it may spam the logs with -EPROTO (71) messages as it
+attempts to retry.
+
+Most serial usb drivers (metro-usb, pl2303, mos7840, ...) only output
+these messages for debugging.  The generic driver treats these as
+errors.
+
+Change the default output for the generic serial driver from error to
+debug to silence these non-critical errors.
+
+Signed-off-by: Jeremiah Mahler <jmmahler@gmail.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
+
+diff --git a/drivers/usb/serial/generic.c b/drivers/usb/serial/generic.c
+index 1bd1922..2d7207b 100644
+--- a/drivers/usb/serial/generic.c
++++ b/drivers/usb/serial/generic.c
+@@ -373,7 +373,7 @@ void usb_serial_generic_read_bulk_callback(struct urb *urb)
+ 							__func__, urb->status);
+ 		return;
+ 	default:
+-		dev_err(&port->dev, "%s - nonzero urb status: %d\n",
++		dev_dbg(&port->dev, "%s - nonzero urb status: %d\n",
+ 							__func__, urb->status);
+ 		goto resubmit;
+ 	}
+-- 
+cgit v0.10.2
+
