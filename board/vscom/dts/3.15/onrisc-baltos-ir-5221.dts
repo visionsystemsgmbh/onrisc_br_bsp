@@ -39,12 +39,6 @@
 		regulator-boot-on;
 	};
 
-	lis3_reg: fixedregulator@1 {
-		compatible = "regulator-fixed";
-		regulator-name = "lis3_reg";
-		regulator-boot-on;
-	};
-
 	wl12xx_vmmc: fixedregulator@2 {
 		pinctrl-names = "default";
 		pinctrl-0 = <&wl12xx_gpio>;
@@ -241,14 +235,14 @@
 &gpmc {
 	pinctrl-names = "default";
 	pinctrl-0 = <&nandflash_pins_s0>;
-	ranges = <0 0 0x08000000 0x10000000>;	/* CS0: NAND */
+	ranges = <0 0 0x08000000 0x1000000>;	/* CS0: 16MB for NAND */
 	status = "okay";
 
 	nand@0,0 {
-		reg = <0 0 0>; /* CS0, offset 0 */
+		reg = <0 0 4>; /* CS0, offset 0, IO size 4 */
 		nand-bus-width = <8>;
 		ti,nand-ecc-opt = "bch8";
-		ti,nand-xfer-type = "polled";
+		ti,nand-xfer-type = "prefetch-polled";
 
 		gpmc,device-nand = "true";
 		gpmc,device-width = <1>;

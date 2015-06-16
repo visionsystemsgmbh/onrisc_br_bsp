@@ -51,6 +51,19 @@
 				algo = "sha1";
 			};
 		};
+		fdt212@1 {
+			description = "Flattened Device Tree blob (212)";
+			data = /incbin/("onrisc-baltos-ir-2110.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			hash@1 {
+				algo = "crc32";
+			};
+			hash@2 {
+				algo = "sha1";
+			};
+		};
 		fdt214@1 {
 			description = "Flattened Device Tree blob (214)";
 			data = /incbin/("onrisc-baltos-dio-1080.dtb");
@@ -90,6 +103,11 @@
 			description = "Boot Linux kernel with FDT blob (211)";
 			kernel = "kernel@1";
 			fdt = "fdt211@1";
+		};
+		conf212@1 {
+			description = "Boot Linux kernel with FDT blob (212)";
+			kernel = "kernel@1";
+			fdt = "fdt212@1";
 		};
 		conf214@1 {
 			description = "Boot Linux kernel with FDT blob (214)";

@@ -17,7 +17,7 @@
 #include <dt-bindings/pwm/pwm.h>
 
 / {
-	model = "OnRISC Baltos iR 3220";
+	model = "OnRISC Baltos iR 2110";
 	compatible = "vscom,onrisc", "ti,am33xx";
 
 	cpus {
@@ -77,12 +77,6 @@
 		>;
 	};
 
-	tca6416_pins: pinmux_tca6416_pins {
-		pinctrl-single,pins = <
-			0x1b4 (PIN_INPUT_PULLUP | MUX_MODE7)      /* xdma_event_intr1.gpio0[20] tca6416 stuff */
-		>;
-	};
-
 	i2c1_pins: pinmux_i2c1_pins {
 		pinctrl-single,pins = <
 			0x158 0x2a      /* spi0_d1.i2c1_sda_mux3, INPUT | MODE2 */
@@ -109,23 +103,6 @@
 			0x0e4 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* lcd_hsync.gpio2[23] DSR */
 			0x0e8 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* lcd_pclk.gpio2[24] DCD */
 			0x0ec (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* lcd_ac_bias_en.gpio2[25] RI */
-		>;
-	};
-
-	uart2_pins: pinmux_uart2_pins {
-		pinctrl-single,pins = <
-			0x150 0x29      /* spi0_sclk.uart2_rxd_mux3, INPUT | MODE1 */
-			0x154 0x09      /* spi0_d0.uart2_txd_mux3, OUTPUT | MODE1 */
-			/*0x188 0x2a*/      /* i2c0_sda.uart2_ctsn_mux0, INPUT | MODE2 */
-			/*0x18c 0x2a*/      /* i2c0_scl.uart2_rtsn_mux0, INPUT | MODE2 */
-			0x188 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* i2c0_sda.uart2_ctsn_mux0 */
-			0x18c (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* i2c0_scl.uart2_rtsn_mux0 */
-			0x030 (PIN_OUTPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad12.gpio1[12] DTR */
-			0x034 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad13.gpio1[13] DSR */
-			0x038 (PIN_INPUT_PULLDOWN | MUX_MODE7)      /* gpmc_ad14.gpio1[14] DCD */
-			0x03c (PIN_INPUT_PULLDOWN | MUX_MODE7)     /* gpmc_ad15.gpio1[15] RI */
-
-			0x1a0 (PIN_INPUT_PULLUP | MUX_MODE7)      /* mcasp0_aclkr.gpio3[18], INPUT_PULLDOWN | MODE7 */
 		>;
 	};
 
@@ -288,19 +265,6 @@
 	status = "okay";
 };
 
-&uart2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart2_pins>;
-	dtr-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
-	dsr-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
-	dcd-gpios = <&gpio1 14 GPIO_ACTIVE_LOW>;
-	rng-gpios = <&gpio1 15 GPIO_ACTIVE_LOW>;
-	cts-gpios = <&gpio3 5 GPIO_ACTIVE_LOW>;
-	rts-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>;
-
-	status = "okay";
-};
-
 &i2c1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_pins>;
@@ -323,17 +287,6 @@
 		pagesize = <8>;
 		reg = <0x50>;
 	};
-
-	tca6416: gpio@20 {
-		compatible = "ti,tca6416";
-		reg = <0x20>;
-		gpio-controller;
-		#gpio-cells = <2>;
-		interrupt-parent = <&gpio0>;
-		interrupts = <20 GPIO_ACTIVE_LOW>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&tca6416_pins>;
-	};
 };
 
 &usb {
@@ -347,17 +300,9 @@
 		status = "okay";
 	};
 
-	usb-phy@47401b00 {
-		status = "okay";
-	};
-
 	usb@47401000 {
 		status = "okay";
 		dr_mode = "host";
-	};
-
-	usb@47401800 {
-		status = "okay";
 	};
 
 	dma-controller@47402000  {
@@ -464,7 +409,7 @@
 };
 
 &cpsw_emac0 {
-	phy_id = <&davinci_mdio>, <0>;
+	phy_id = <&davinci_mdio>, <1>;
 	phy-mode = "rmii";
 	dual_emac_res_vlan = <1>;
 };
