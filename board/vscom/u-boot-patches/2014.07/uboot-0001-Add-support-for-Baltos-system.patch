@@ -1,20 +1,20 @@
-From f530a77fff4f78efa978e56c928a1a70b9e5a626 Mon Sep 17 00:00:00 2001
+From c86906b32338158bbc83aadeff5f7c29cb85a174 Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Baltos system
 
 Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
 ---
- arch/arm/include/asm/arch-am33xx/hardware_am33xx.h |    3 +
- board/vscom/baltos/Makefile                        |   13 +
- board/vscom/baltos/README                          |    1 +
- board/vscom/baltos/board.c                         |  491 ++++++++++++++++++++
- board/vscom/baltos/board.h                         |   90 ++++
- board/vscom/baltos/mux.c                           |  190 ++++++++
- board/vscom/baltos/u-boot.lds                      |  128 +++++
- boards.cfg                                         |    1 +
- include/configs/baltos.h                           |  337 ++++++++++++++
- 9 files changed, 1254 insertions(+), 0 deletions(-)
+ arch/arm/include/asm/arch-am33xx/hardware_am33xx.h |   3 +
+ board/vscom/baltos/Makefile                        |  13 +
+ board/vscom/baltos/README                          |   1 +
+ board/vscom/baltos/board.c                         | 491 +++++++++++++++++++++
+ board/vscom/baltos/board.h                         |  90 ++++
+ board/vscom/baltos/mux.c                           | 190 ++++++++
+ board/vscom/baltos/u-boot.lds                      | 128 ++++++
+ boards.cfg                                         |   1 +
+ include/configs/baltos.h                           | 370 ++++++++++++++++
+ 9 files changed, 1287 insertions(+)
  create mode 100644 board/vscom/baltos/Makefile
  create mode 100644 board/vscom/baltos/README
  create mode 100644 board/vscom/baltos/board.c
@@ -998,10 +998,10 @@ index 1ba2081..497ae50 100644
  Active  arm         armv7          am33xx      BuR             tseries             tseries_nand                          tseries:SERIAL1,CONS_INDEX=1,NAND                                                                                                 Hannes Petermaier <hannes.petermaier@br-automation.com>
 diff --git a/include/configs/baltos.h b/include/configs/baltos.h
 new file mode 100644
-index 0000000..39ff1c5
+index 0000000..b2cd8bb
 --- /dev/null
 +++ b/include/configs/baltos.h
-@@ -0,0 +1,337 @@
+@@ -0,0 +1,370 @@
 +/*
 + * am335x_evm.h
 + *
@@ -1106,7 +1106,9 @@ index 0000000..39ff1c5
 +	"optargs=\0" \
 +	"mmcdev=0\0" \
 +	"mmcroot=/dev/mmcblk0p2 ro\0" \
++	"usbroot=/dev/sda2 ro\0" \
 +	"mmcrootfstype=ext4 rootwait\0" \
++	"usbrootfstype=ext4 rootwait\0" \
 +	"rootpath=/export/rootfs\0" \
 +	"nfsopts=nolock\0" \
 +	"static_ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}" \
@@ -1118,6 +1120,11 @@ index 0000000..39ff1c5
 +		"${mtdparts} " \
 +		"root=${mmcroot} " \
 +		"rootfstype=${mmcrootfstype}\0" \
++	"usbargs=setenv bootargs console=${console} " \
++		"${optargs} " \
++		"${mtdparts} " \
++		"root=${usbroot} " \
++		"rootfstype=${usbrootfstype}\0" \
 +	"spiroot=/dev/mtdblock4 rw\0" \
 +	"spirootfstype=jffs2\0" \
 +	"spisrcaddr=0xe0000\0" \
@@ -1134,7 +1141,10 @@ index 0000000..39ff1c5
 +		"ip=dhcp\0" \
 +	"bootenv=uEnv.txt\0" \
 +	"loadbootenv=load mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
++	"usbloadbootenv=load usb 0:1 ${loadaddr} ${bootenv}\0" \
 +	"importbootenv=echo Importing environment from mmc ...; " \
++		"env import -t $loadaddr $filesize\0" \
++	"usbimportbootenv=echo Importing environment from USB ...; " \
 +		"env import -t $loadaddr $filesize\0" \
 +	"ramargs=setenv bootargs console=${console} " \
 +		"${optargs} " \
@@ -1142,7 +1152,14 @@ index 0000000..39ff1c5
 +		"rootfstype=${ramrootfstype}\0" \
 +	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
 +	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
++	"usbloadimage=load usb 0:1 ${loadaddr} kernel-fit.itb\0" \
 +	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
++	"usbloados=run usbargs; " \
++		"bootm ${loadaddr}#conf${board_name}; " \
++		"if test $? -ne 0; then " \
++			"echo Using default FIT configuration; " \
++			"bootm ${loadaddr}; " \
++		"fi;\0" \
 +	"mmcloados=run mmcargs; " \
 +		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 +			"if run loadfdt; then " \
@@ -1156,6 +1173,21 @@ index 0000000..39ff1c5
 +			"fi; " \
 +		"else " \
 +			"bootz; " \
++		"fi;\0" \
++	"usbboot=usb reset; " \
++		"if usb storage; then " \
++			"echo USB drive found;" \
++			"if run usbloadbootenv; then " \
++				"echo Loaded environment from ${bootenv};" \
++				"run usbimportbootenv;" \
++			"fi;" \
++			"if test -n $uenvcmd; then " \
++				"echo Running uenvcmd ...;" \
++				"run uenvcmd;" \
++			"fi;" \
++			"if run usbloadimage; then " \
++				"run usbloados;" \
++			"fi;" \
 +		"fi;\0" \
 +	"mmcboot=mmc dev ${mmcdev}; " \
 +		"if mmc rescan; then " \
@@ -1194,6 +1226,7 @@ index 0000000..39ff1c5
 +
 +#define CONFIG_BOOTCOMMAND \
 +	"run findfdt; " \
++	"run usbboot;" \
 +	"run mmcboot;" \
 +	"setenv mmcdev 1; " \
 +	"setenv bootpart 1:2; " \
@@ -1281,9 +1314,9 @@ index 0000000..39ff1c5
 +#define CONFIG_USB_GADGET_VBUS_DRAW	2
 +#define CONFIG_MUSB_HOST
 +#define CONFIG_AM335X_USB0
-+#define CONFIG_AM335X_USB0_MODE	MUSB_PERIPHERAL
++#define CONFIG_AM335X_USB0_MODE	MUSB_HOST
 +#define CONFIG_AM335X_USB1
-+#define CONFIG_AM335X_USB1_MODE MUSB_HOST
++#define CONFIG_AM335X_USB1_MODE MUSB_OTG
 +
 +#ifdef CONFIG_MUSB_HOST
 +#define CONFIG_CMD_USB
@@ -1340,5 +1373,5 @@ index 0000000..39ff1c5
 +
 +#endif	/* ! __CONFIG_BALTOS_H */
 -- 
-1.7.7
+2.1.4
 

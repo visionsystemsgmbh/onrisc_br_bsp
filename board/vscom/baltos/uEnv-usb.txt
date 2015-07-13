@@ -1,0 +1,2 @@
+bootcmd=setenv loadaddr 0x82000000; run usbargs; fatload usb 0:1 ${loadaddr} kernel-fit.itb; bootm ${loadaddr}#conf${board_name}; if test $? -ne 0; then echo "Using default FIT configuration"; bootm ${loadaddr}; fi;
+uenvcmd=boot
