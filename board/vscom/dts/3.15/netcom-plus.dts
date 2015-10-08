@@ -39,17 +39,47 @@
 		regulator-boot-on;
 	};
 
-	lis3_reg: fixedregulator@1 {
+	wl12xx_vmmc: fixedregulator@2 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&wl12xx_gpio>;
 		compatible = "regulator-fixed";
-		regulator-name = "lis3_reg";
-		regulator-boot-on;
+		regulator-name = "vwl1271";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&gpio3 8 0>;
+		startup-delay-us = <70000>;
+		enable-active-high;
 	};
 };
 
 &am33xx_pinmux {
+	mmc2_pins: pinmux_mmc2_pins {
+		pinctrl-single,pins = <
+			0x020 (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_ad8.mmc1_dat0_mux0 */
+			0x024 (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_ad9.mmc1_dat1_mux0 */
+			0x028 (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_ad10.mmc1_dat2_mux0 */
+			0x02c (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_ad11.mmc1_dat3_mux0 */
+			0x080 (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_csn1.mmc1_clk_mux0 */
+			0x084 (PIN_INPUT_PULLUP | MUX_MODE2)      /* gpmc_csn2.mmc1_cmd_mux0 */
+			0x1e4 (PIN_INPUT_PULLUP | MUX_MODE7)      /* emu0.gpio3[7] */
+		>;
+	};
+
+	wl12xx_gpio: pinmux_wl12xx_gpio {
+		pinctrl-single,pins = <
+			0x1e8 (PIN_OUTPUT_PULLUP | MUX_MODE7)      /* emu1.gpio3[8] */
+		>;
+	};
+
 	tps65910_pins: pinmux_tps65910_pins {
 		pinctrl-single,pins = <
 			0x078 (PIN_INPUT_PULLUP | MUX_MODE7)      /* gpmc_ben1.gpio1[28] */
+		>;
+	};
+
+	tca6416_pins: pinmux_tca6416_pins {
+		pinctrl-single,pins = <
+			0x1b4 (PIN_INPUT_PULLUP | MUX_MODE7)      /* xdma_event_intr1.gpio0[20] tca6416 stuff */
 		>;
 	};
 
@@ -57,6 +87,13 @@
 		pinctrl-single,pins = <
 			0x158 0x2a      /* spi0_d1.i2c1_sda_mux3, INPUT | MODE2 */
 			0x15c 0x2a      /* spi0_cs0.i2c1_scl_mux3, INPUT | MODE2 */
+		>;
+	};
+
+	i2c2_pins: pinmux_i2c2_pins {
+		pinctrl-single,pins = <
+			0x178 (PIN_INPUT_PULLDOWN | MUX_MODE3)      /* uart1_ctsn.i2c2_sda, INPUT | MODE0 */
+			0x17c (PIN_INPUT_PULLDOWN | MUX_MODE3)      /* uart1_rtsn.i2c2_scl, INPUT | MODE0 */
 		>;
 	};
 
@@ -171,14 +208,14 @@
 &gpmc {
 	pinctrl-names = "default";
 	pinctrl-0 = <&nandflash_pins_s0>;
-	ranges = <0 0 0x08000000 0x10000000>;	/* CS0: NAND */
+	ranges = <0 0 0x08000000 0x1000000>;	/* CS0: 16MB for NAND */
 	status = "okay";
 
 	nand@0,0 {
-		reg = <0 0 0>; /* CS0, offset 0 */
+		reg = <0 0 4>; /* CS0, offset 0, IO size 4 */
 		nand-bus-width = <8>;
 		ti,nand-ecc-opt = "bch8";
-		ti,nand-xfer-type = "polled";
+		ti,nand-xfer-type = "prefetch-polled";
 
 		gpmc,device-nand = "true";
 		gpmc,device-width = <1>;
@@ -239,6 +276,39 @@
 		compatible = "at24,24c02";
 		pagesize = <8>;
 		reg = <0x50>;
+	};
+
+	tca6416a: gpio@20 {
+		compatible = "ti,tca6416";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <20 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tca6416_pins>;
+	};
+};
+
+&i2c2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2_pins>;
+
+	status = "okay";
+	clock-frequency = <400000>;
+
+	tca6416b: gpio@20 {
+		compatible = "ti,tca6416";
+		reg = <0x20>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+
+	tca6416c: gpio@21 {
+		compatible = "ti,tca6416";
+		reg = <0x21>;
+		gpio-controller;
+		#gpio-cells = <2>;
 	};
 };
 
@@ -389,6 +459,16 @@
 &mmc1 {
 	vmmc-supply = <&vmmc_reg>;
 	status = "okay";
+};
+
+&mmc2 {
+	status = "okay";
+	vmmc-supply = <&wl12xx_vmmc>;
+	ti,non-removable;
+	bus-width = <4>;
+	cap-power-off-card;
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc2_pins>;
 };
 
 &sham {
