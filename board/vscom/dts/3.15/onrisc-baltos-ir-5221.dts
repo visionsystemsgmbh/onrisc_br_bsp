@@ -514,6 +514,10 @@
 	ti,no-reset-on-init;
 };
 
+&gpio3 {
+	ti,no-reset-on-init;
+};
+
 &dcan1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&dcan1_pins>;

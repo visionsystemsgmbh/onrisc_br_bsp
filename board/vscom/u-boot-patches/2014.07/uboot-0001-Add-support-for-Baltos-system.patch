@@ -1,4 +1,4 @@
-From c86906b32338158bbc83aadeff5f7c29cb85a174 Mon Sep 17 00:00:00 2001
+From 46972f6bb142e51fb0aebb6d97570d879818846d Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Tue, 15 Jul 2014 12:41:24 +0200
 Subject: [PATCH] Add support for Baltos system
@@ -8,13 +8,13 @@ Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
  arch/arm/include/asm/arch-am33xx/hardware_am33xx.h |   3 +
  board/vscom/baltos/Makefile                        |  13 +
  board/vscom/baltos/README                          |   1 +
- board/vscom/baltos/board.c                         | 491 +++++++++++++++++++++
+ board/vscom/baltos/board.c                         | 506 +++++++++++++++++++++
  board/vscom/baltos/board.h                         |  90 ++++
  board/vscom/baltos/mux.c                           | 190 ++++++++
  board/vscom/baltos/u-boot.lds                      | 128 ++++++
  boards.cfg                                         |   1 +
- include/configs/baltos.h                           | 370 ++++++++++++++++
- 9 files changed, 1287 insertions(+)
+ include/configs/baltos.h                           | 370 +++++++++++++++
+ 9 files changed, 1302 insertions(+)
  create mode 100644 board/vscom/baltos/Makefile
  create mode 100644 board/vscom/baltos/README
  create mode 100644 board/vscom/baltos/board.c
@@ -63,10 +63,10 @@ index 0000000..f744ace
 +BSP for VScom OnRISC Balios family devices, like Balios iR 5221.
 diff --git a/board/vscom/baltos/board.c b/board/vscom/baltos/board.c
 new file mode 100644
-index 0000000..f9fe746
+index 0000000..ea8676c
 --- /dev/null
 +++ b/board/vscom/baltos/board.c
-@@ -0,0 +1,491 @@
+@@ -0,0 +1,506 @@
 +/*
 + * board.c
 + *
@@ -107,6 +107,7 @@ index 0000000..f9fe746
 +/* GPIO that controls power to DDR on EVM-SK */
 +#define GPIO_DDR_VTT_EN		7
 +#define DIP_S1			44
++#define MPCIE_SW		100
 +
 +static struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
 +
@@ -420,6 +421,11 @@ index 0000000..f9fe746
 +	printf("\nFDT was successfully setup\n");
 +}
 +
++static struct module_pin_mux pcie_sw_pin_mux[] = {
++	{OFFSET(mii1_rxdv), (MODE(7) | PULLUDEN )},     /* GPIO3_4 */
++	{-1},
++};
++
 +static struct module_pin_mux dip_pin_mux[] = {
 +	{OFFSET(gpmc_ad12), (MODE(7) | RXACTIVE )},	/* GPIO1_12 */
 +	{OFFSET(gpmc_ad13), (MODE(7)  | RXACTIVE )},	/* GPIO1_13 */
@@ -448,6 +454,15 @@ index 0000000..f9fe746
 +			baltos_set_console();
 +		}
 +	}
++
++	configure_module_pin_mux(pcie_sw_pin_mux);
++	if (gpio_request(MPCIE_SW, "mpcie_sw")) {
++		printf("failed to export GPIO %d\n", MPCIE_SW);
++	}
++	if (gpio_direction_output(MPCIE_SW, 1)) {
++		printf("failed to set GPIO %d direction\n", MPCIE_SW);
++	}
++
 +	setenv("board_name", model);
 +#endif
 +
