@@ -1,0 +1,71 @@
+#!/bin/sh
+
+global autoboot_timeout
+[ -z "${global.autoboot_timeout}" ] && global.autoboot_timeout=1
+
+
+timeout -a $global.autoboot_timeout -v key
+autoboot="$?"
+
+if [ "${key}" = "q" ]; then
+	exit
+fi
+
+if [ -d /boot ]; then
+	umount /boot
+else
+	mkdir /boot
+fi
+
+usb
+
+# turn mPCIe on
+gpio_direction_output 100 1
+
+# check if USB drive is available
+if [ -e /dev/disk0.0 ]; then
+	mount /dev/disk0.0 /boot
+	if [ -e /boot/kernel-fit.itb ]; then
+		global linux.bootargs.base="root=/dev/sda2 rootwait=1"
+		bootm /boot/kernel-fit.itb@conf$global.board.id@1 
+		if [ $? -ne 0 ]; then
+			bootm /boot/kernel-fit.itb
+		fi
+	fi
+	umount /boot
+fi
+
+# check if MMC is available
+if [ -e /dev/mmc0.0 ]; then
+	mount /dev/mmc0.0 /boot
+	if [ -e /boot/kernel-fit.itb ]; then
+		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait=1"
+		bootm /boot/kernel-fit.itb@conf$global.board.id@1 
+		if [ $? -ne 0 ]; then
+			bootm /boot/kernel-fit.itb
+		fi
+	fi
+	umount /boot
+fi
+
+# check if MMC (second partition) is available
+if [ -e /dev/mmc0.1 ]; then
+	mount /dev/mmc0.1 /boot
+	if [ -e /boot/boot/kernel-fit.itb ]; then
+		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait=1"
+		bootm /boot/boot/kernel-fit.itb@conf$global.board.id@1
+		if [ $? -ne 0 ]; then
+			bootm /boot/kernel-fit.itb
+		fi
+	fi
+	umount /boot
+fi
+
+# boot from NAND
+ubiattach /dev/nand0.UBI
+mount /dev/nand0.UBI.ubi.kernel /boot
+global linux.bootargs.base="root=ubi0:rootfs rw ubi.mtd=5 rootfstype=ubifs rootwait=1"
+bootm /boot/kernel-fit.itb@conf$global.board.id@1
+if [ $? -ne 0 ]; then
+	bootm /boot/kernel-fit.itb
+fi
