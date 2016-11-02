@@ -1,0 +1,40 @@
+From 89e75c85981b6f29aa792ff9cdf838b0e806b754 Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Thu, 20 Oct 2016 10:24:05 +0200
+Subject: [PATCH 3/4] serial: mctrl_gpio: restrict MCTRL initialization
+
+Don't initialize particular GPIO pins, if they are not declared as
+device property.
+
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+ drivers/tty/serial/serial_mctrl_gpio.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/tty/serial/serial_mctrl_gpio.c b/drivers/tty/serial/serial_mctrl_gpio.c
+index d2da6aa..3bb9c09 100644
+--- a/drivers/tty/serial/serial_mctrl_gpio.c
++++ b/drivers/tty/serial/serial_mctrl_gpio.c
+@@ -19,6 +19,7 @@
+ #include <linux/irq.h>
+ #include <linux/gpio/consumer.h>
+ #include <linux/termios.h>
++#include <linux/property.h>
+ #include <linux/serial_core.h>
+ #include <linux/module.h>
+ 
+@@ -124,6 +125,11 @@ struct mctrl_gpios *mctrl_gpio_init_noauto(struct device *dev, unsigned int idx)
+ 
+ 	for (i = 0; i < UART_GPIO_MAX; i++) {
+ 		enum gpiod_flags flags;
++		char mctrl_property[10];
++
++		sprintf(mctrl_property, "%s-gpios", mctrl_gpios_desc[i].name);
++		if (!device_property_present(dev, mctrl_property))
++			continue;
+ 
+ 		if (mctrl_gpios_desc[i].dir_out)
+ 			flags = GPIOD_OUT_LOW;
+-- 
+2.1.4
+

@@ -1,0 +1,28 @@
+From 463d8bbf012d4a767089cb73905ac0f16ec69090 Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Wed, 2 Nov 2016 09:40:05 +0100
+Subject: [PATCH 2/4] ARM: dts: am335x-baltos: don't reset gpio3 block
+
+This change is needed in order to enable some hardware components
+from bootloader.
+
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+ arch/arm/boot/dts/am335x-baltos.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm/boot/dts/am335x-baltos.dtsi b/arch/arm/boot/dts/am335x-baltos.dtsi
+index dd45d17..09b9541 100644
+--- a/arch/arm/boot/dts/am335x-baltos.dtsi
++++ b/arch/arm/boot/dts/am335x-baltos.dtsi
+@@ -406,3 +406,7 @@
+ &gpio0 {
+ 	ti,no-reset-on-init;
+ };
++
++&gpio3 {
++	ti,no-reset-on-init;
++};
+-- 
+2.1.4
+
