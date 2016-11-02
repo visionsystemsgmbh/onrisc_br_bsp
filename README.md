@@ -4,12 +4,12 @@ OnRISC Buildroot based BSP
 Installation
 ------------
 
-OnRISC BSP requires Buildroot version 2016.05 or newer.
+OnRISC BSP requires Buildroot version 2016.11 or newer.
 
 1. git clone https://github.com/visionsystemsgmbh/onrisc_br_bsp.git
 2. git clone http://git.buildroot.net/git/buildroot.git
 3. cd buildroot
-4. make BR2_EXTERNAL=../onrisc_br_bsp/ help
+4. make BR2_EXTERNAL=../onrisc_br_bsp/ list-defconfigs
 
 Now you can choose a default config for desired device. For example Baltos:
 
