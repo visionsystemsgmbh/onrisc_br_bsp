@@ -1,0 +1,37 @@
+From db6d14a40cbb39bd3507a29b9506b268026e004d Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Mon, 27 Feb 2017 17:03:08 +0100
+Subject: [PATCH] Revert USB delay removing patch
+
+Without these delays some USB mass storage drives won't be
+detected.
+
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+ common/usb_hub.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/common/usb_hub.c b/common/usb_hub.c
+index ff9cd50..4fee422 100644
+--- a/common/usb_hub.c
++++ b/common/usb_hub.c
+@@ -312,6 +312,7 @@ int usb_hub_port_connect_change(struct usb_device *dev, int port)
+ 		if (!(portstatus & USB_PORT_STAT_CONNECTION))
+ 			return -ENOTCONN;
+ 	}
++	mdelay(200);
+ 
+ 	/* Reset the port */
+ 	ret = legacy_hub_port_reset(dev, port, &portstatus);
+@@ -321,6 +322,8 @@ int usb_hub_port_connect_change(struct usb_device *dev, int port)
+ 		return ret;
+ 	}
+ 
++	mdelay(200);
++
+ 	switch (portstatus & USB_PORT_STAT_SPEED_MASK) {
+ 	case USB_PORT_STAT_SUPER_SPEED:
+ 		speed = USB_SPEED_SUPER;
+-- 
+2.1.4
+
