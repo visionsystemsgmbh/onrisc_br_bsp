@@ -26,8 +26,23 @@ gpio_direction_output 100 1
 if [ -e /dev/disk0.0 ]; then
 	mount /dev/disk0.0 /boot
 	if [ -e /boot/kernel-fit.itb ]; then
-		global linux.bootargs.base="root=/dev/sda2 rootwait=1"
+		echo "Booting from USB (disk0.0)"
+		global linux.bootargs.base="root=/dev/sda2 rootwait"
 		bootm /boot/kernel-fit.itb@conf$global.board.id@1 
+		if [ $? -ne 0 ]; then
+			bootm /boot/kernel-fit.itb
+		fi
+	fi
+	umount /boot
+fi
+
+# check if USB (second partition) is available
+if [ -e /dev/disk0.1 ]; then
+	mount /dev/disk0.1 /boot
+	if [ -e /boot/boot/kernel-fit.itb ]; then
+		echo "Booting from USB (disk0.1)"
+		global linux.bootargs.base="root=/dev/sda2 rootwait"
+		bootm /boot/boot/kernel-fit.itb@conf$global.board.id@1
 		if [ $? -ne 0 ]; then
 			bootm /boot/kernel-fit.itb
 		fi
@@ -39,7 +54,8 @@ fi
 if [ -e /dev/mmc0.0 ]; then
 	mount /dev/mmc0.0 /boot
 	if [ -e /boot/kernel-fit.itb ]; then
-		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait=1"
+		echo "Booting from MMC (mmc0.0)"
+		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait"
 		bootm /boot/kernel-fit.itb@conf$global.board.id@1 
 		if [ $? -ne 0 ]; then
 			bootm /boot/kernel-fit.itb
@@ -52,7 +68,8 @@ fi
 if [ -e /dev/mmc0.1 ]; then
 	mount /dev/mmc0.1 /boot
 	if [ -e /boot/boot/kernel-fit.itb ]; then
-		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait=1"
+		echo "Booting from MMC (mmc0.1)"
+		global linux.bootargs.base="root=/dev/mmcblk0p2 rootwait"
 		bootm /boot/boot/kernel-fit.itb@conf$global.board.id@1
 		if [ $? -ne 0 ]; then
 			bootm /boot/kernel-fit.itb
@@ -62,9 +79,10 @@ if [ -e /dev/mmc0.1 ]; then
 fi
 
 # boot from NAND
+echo "Booting from NAND"
 ubiattach /dev/nand0.UBI
 mount /dev/nand0.UBI.ubi.kernel /boot
-global linux.bootargs.base="root=ubi0:rootfs rw ubi.mtd=5 rootfstype=ubifs rootwait=1"
+global linux.bootargs.base="root=ubi0:rootfs rw ubi.mtd=5 rootfstype=ubifs rootwait"
 bootm /boot/kernel-fit.itb@conf$global.board.id@1
 if [ $? -ne 0 ]; then
 	bootm /boot/kernel-fit.itb
