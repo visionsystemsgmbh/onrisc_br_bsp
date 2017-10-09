@@ -1,0 +1,12 @@
+config BR2_PACKAGE_NODE_RED_CONTRIB_LIBONRISC
+	bool "node-red-contrib-libonrisc"
+	select BR2_PACKAGE_LIBONRISC
+	depends on BR2_PACKAGE_NODEJS
+	depends on BR2_TOOLCHAIN_HAS_THREADS
+	depends on BR2_PACKAGE_HAS_UDEV
+	help
+	  OnRISC hardware API
+
+comment "node-red-contrib-libonrisc requires a toolchain with threads support, nodejs and libudev"
+	depends on !BR2_TOOLCHAIN_HAS_THREADS || !BR2_PACKAGE_HAS_UDEV || !BR2_PACKAGE_NODEJS
+

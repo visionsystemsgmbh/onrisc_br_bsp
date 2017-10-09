@@ -1,1 +1,2 @@
 source "$BR2_EXTERNAL_ONRISC_BSP_PATH/package/libonrisc/Config.in"
+source "$BR2_EXTERNAL_ONRISC_BSP_PATH/package/node-red-contrib-libonrisc/Config.in"
