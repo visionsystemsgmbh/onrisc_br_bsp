@@ -20,6 +20,7 @@ ifeq ($(BR2_PACKAGE_NODEJS),y)
 	LIBONRISC_CONF_OPTS += -DNODEJS_WRAP=ON -DSWIG_EXECUTABLE=$(SWIG)
 define LIBONRISC_POST_INSTALL_NODEJS_MODULE
 	$(NPM) install -g `$(NPM) pack $(@D)/swig_nodejs`
+	echo "export NODE_PATH=/usr/lib/node_modules" >> $(TARGET_DIR)/etc/profile.d/vsnodejs.sh
 endef
 LIBONRISC_POST_INSTALL_TARGET_HOOKS = LIBONRISC_POST_INSTALL_NODEJS_MODULE
 else
