@@ -36,12 +36,12 @@ fi
 # check if USB (second partition) is available
 if [ -e /dev/disk0.1 ]; then
 	mount /dev/disk0.1
-	if [ -e /mnt/disk0.0/boot/kernel-fit.itb ]; then
+	if [ -e /mnt/disk0.1/boot/kernel-fit.itb ]; then
 		echo "Booting from USB (disk0.1)"
 		global linux.bootargs.base="root=/dev/sda2 rootwait"
-		bootm /mnt/disk0.0/boot/kernel-fit.itb@conf$global.board.id@1
+		bootm /mnt/disk0.1/boot/kernel-fit.itb@conf$global.board.id@1
 		if [ $? -ne 0 ]; then
-			bootm /mnt/disk0.0/boot/kernel-fit.itb
+			bootm /mnt/disk0.1/boot/kernel-fit.itb
 		fi
 	fi
 fi
