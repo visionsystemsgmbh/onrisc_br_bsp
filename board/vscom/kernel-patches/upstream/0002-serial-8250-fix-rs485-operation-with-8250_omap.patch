@@ -1,0 +1,26 @@
+From dbff0a218b62867bbbf1240ce1cd80d235e1b246 Mon Sep 17 00:00:00 2001
+From: Vision Systems GmbH <contact@visionsystems.de>
+Date: Thu, 14 Nov 2019 15:20:17 +0100
+Subject: [PATCH 2/6] serial: 8250: fix rs485 operation with 8250_omap
+
+---
+ drivers/tty/serial/8250/8250_port.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index 2c65c775bf5a..e6f77748bf1d 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -1405,7 +1405,8 @@ static void __do_stop_tx_rs485(struct uart_8250_port *p)
+ 	 * Enable previously disabled RX interrupts.
+ 	 */
+ 	if (!(p->port.rs485.flags & SER_RS485_RX_DURING_TX)) {
+-		serial8250_clear_and_reinit_fifos(p);
++		serial_port_out(&p->port, UART_FCR, p->fcr |
++				UART_FCR_CLEAR_RCVR | UART_FCR_CLEAR_XMIT);
+ 
+ 		p->ier |= UART_IER_RLSI | UART_IER_RDI;
+ 		serial_port_out(&p->port, UART_IER, p->ier);
+-- 
+2.17.0
+
