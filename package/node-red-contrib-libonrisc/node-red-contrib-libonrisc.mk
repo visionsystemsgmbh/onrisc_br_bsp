@@ -3,7 +3,7 @@
 # node-red-contrib-libonrisc
 #
 #############################################################
-NODE_RED_CONTRIB_LIBONRISC_VERSION = 1.0.0
+NODE_RED_CONTRIB_LIBONRISC_VERSION = 1.1.0
 NODE_RED_CONTRIB_LIBONRISC_SITE = $(call github,visionsystemsgmbh,node-red-contrib-libonrisc,$(NODE_RED_CONTRIB_LIBONRISC_VERSION))
 NODE_RED_CONTRIB_LIBONRISC_DEPENDENCIES = libonrisc nodejs
 
