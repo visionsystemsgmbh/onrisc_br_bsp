@@ -22,6 +22,11 @@ ifeq ($(BR2_PACKAGE_NODEJS),y)
 define LIBONRISC_POST_INSTALL_NODEJS_MODULE
 	$(NPM) install -g `$(NPM) pack $(@D)/buildroot-build/nodejs`
 	echo "export NODE_PATH=/usr/lib/node_modules" > $(TARGET_DIR)/etc/profile.d/vsnodejs.sh
+	rm -fr $(TARGET_DIR)/usr/lib/node_modules/libonrisc/node_modules/ref-array-napi/node_modules/ref-napi/prebuilds
+	rm -fr $(TARGET_DIR)/usr/lib/node_modules/libonrisc/node_modules/ffi-napi/prebuilds
+	rm -fr $(TARGET_DIR)/usr/lib/node_modules/libonrisc/node_modules/ffi-napi/node_modules/ref-napi/prebuilds
+	rm -fr $(TARGET_DIR)/usr/lib/node_modules/libonrisc/node_modules/ref-napi/prebuilds
+	rm -fr $(TARGET_DIR)/usr/lib/node_modules/libonrisc/node_modules/ref-struct-napi/node_modules/ref-napi/prebuilds
 endef
 LIBONRISC_POST_INSTALL_TARGET_HOOKS = LIBONRISC_POST_INSTALL_NODEJS_MODULE
 else
