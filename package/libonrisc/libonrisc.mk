@@ -5,7 +5,7 @@
 #############################################################
 LIBONRISC_VERSION = 1.6.2
 LIBONRISC_SITE = $(call github,visionsystemsgmbh,libonrisc,$(LIBONRISC_VERSION))
-LIBONRISC_DEPENDENCIES = libsoc eudev host-pkgconf
+LIBONRISC_DEPENDENCIES = libsoc host-pkgconf
 LIBONRISC_INSTALL_STAGING = YES
 LIBONRISC_SUPPORTS_IN_SOURCE_BUILD = NO
 
