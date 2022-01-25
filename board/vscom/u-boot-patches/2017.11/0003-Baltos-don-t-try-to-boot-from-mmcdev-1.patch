@@ -1,0 +1,29 @@
+From df68b6cb75a35949cf5ffce77bd11095edc04f4e Mon Sep 17 00:00:00 2001
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Date: Tue, 25 Jan 2022 11:51:11 +0100
+Subject: [PATCH 3/3] Baltos: don't try to boot from mmcdev 1
+
+There is only one MMC interface that is connected to a SD card slot.
+
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
+---
+ include/configs/baltos.h | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/include/configs/baltos.h b/include/configs/baltos.h
+index 86183f93f9..81468b4935 100644
+--- a/include/configs/baltos.h
++++ b/include/configs/baltos.h
+@@ -209,9 +209,6 @@
+ 	"run findfdt; " \
+ 	"run usbboot;" \
+ 	"run mmcboot;" \
+-	"setenv mmcdev 1; " \
+-	"setenv bootpart 1:2; " \
+-	"run mmcboot;" \
+ 	"run nandboot;"
+ 
+ /* NS16550 Configuration */
+-- 
+2.17.0
+

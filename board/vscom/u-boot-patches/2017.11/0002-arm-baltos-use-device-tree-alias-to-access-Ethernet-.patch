@@ -1,7 +1,8 @@
-From 1af0aaf36d19ca49163f32197f682035f8f6140d Mon Sep 17 00:00:00 2001
+From d8874edbfc9fc498bc4092ee12bff063d8ff65a3 Mon Sep 17 00:00:00 2001
 From: Yegor Yefremov <yegorslists@googlemail.com>
 Date: Fri, 9 Aug 2019 07:15:09 +0200
-Subject: [PATCH] arm: baltos: use device tree alias to access Ethernet slave
+Subject: [PATCH 2/3] arm: baltos: use device tree alias to access Ethernet
+ slave
 
 The full path has changed in the recent kernels so that it is
 not possible to load them. Aliases "ethernet0" and "ethernet1"
@@ -15,12 +16,12 @@ Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/board/vscom/baltos/board.c b/board/vscom/baltos/board.c
-index c5949ad267..036a356578 100644
+index 9a47a7b3cd..ce211c8b1b 100644
 --- a/board/vscom/baltos/board.c
 +++ b/board/vscom/baltos/board.c
-@@ -288,15 +288,15 @@ int ft_board_setup(void *blob, bd_t *bd)
+@@ -293,15 +293,15 @@ int ft_board_setup(void *blob, bd_t *bd)
+ 	mac_addr[4] = header.MAC1[4];
  	mac_addr[5] = header.MAC1[5];
- 
  
 -	node = fdt_path_offset(blob, "/ocp/ethernet/slave@4a100200");
 +	node = fdt_path_offset(blob, "ethernet0");
@@ -37,7 +38,7 @@ index c5949ad267..036a356578 100644
  		return -ENODEV;
  	}
  
-@@ -308,15 +308,15 @@ int ft_board_setup(void *blob, bd_t *bd)
+@@ -313,15 +313,15 @@ int ft_board_setup(void *blob, bd_t *bd)
  	mac_addr[4] = header.MAC2[4];
  	mac_addr[5] = header.MAC2[5];
  
