@@ -7,7 +7,7 @@ Installation
 OnRISC BSP requires Buildroot version 2017.11 or newer.
 
 1. git clone https://github.com/visionsystemsgmbh/onrisc_br_bsp.git
-2. git clone http://git.buildroot.net/git/buildroot.git
+2. git clone https://git.buildroot.net/buildroot
 3. cd buildroot
 4. make BR2_EXTERNAL=../onrisc_br_bsp/ list-defconfigs
 
