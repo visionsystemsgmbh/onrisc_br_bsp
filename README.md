@@ -21,5 +21,5 @@ Invoking make would compile the whole set of images from bootloader till root fi
 Related Links
 -------------
 * Buildroot documentation: http://nightly.buildroot.org/manual.html
-* Device Tree slides: http://events.linuxfoundation.org/sites/events/files/slides/petazzoni-device-tree-dummies.pdf
+* Device Tree slides: https://elinux.org/images/f/f9/Petazzoni-device-tree-dummies_0.pdf
 * Flattened Image Tree slides: http://elinux.org/images/f/f4/Elc2013_Fernandes.pdf 
