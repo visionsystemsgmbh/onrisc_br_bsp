@@ -75,9 +75,17 @@ fi
 # boot from NAND
 echo "Booting from NAND"
 ubiattach /dev/nand0.UBI
-mount /dev/nand0.UBI.ubi.kernel
-global linux.bootargs.base="root=ubi0:rootfs rw ubi.mtd=5 rootfstype=ubifs rootwait"
-bootm /mnt/nand0.UBI.ubi.kernel/kernel-fit.itb@conf$global.board.id@1
+if [ -e /dev/nand0.UBI.ubi.kernel ]; then
+	mount_dev=/dev/nand0.UBI.ubi.kernel
+	fit_img_path=/mnt/nand0.UBI.ubi.kernel/kernel-fit.itb
+	global linux.bootargs.base="root=ubi0:rootfs rw ubi.mtd=5 rootfstype=ubifs rootwait"
+else
+	mount_dev=/dev/nand0.UBI.ubi.rootfs
+	fit_img_path=/mnt/nand0.UBI.ubi.rootfs/boot/kernel-fit.itb
+	global linux.bootargs.base="ubi.mtd=5 ubi.block=0,0 root=/dev/ubiblock0_0 rootfstype=squashfs rootwait"
+fi
+mount $mount_dev
+bootm $fit_img_path@conf$global.board.id@1
 if [ $? -ne 0 ]; then
-	bootm /mnt/nand0.UBI.ubi.kernel/kernel-fit.itb
+	bootm $fit_img_path
 fi
