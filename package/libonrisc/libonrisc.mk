@@ -3,7 +3,7 @@
 # libonrisc
 #
 #############################################################
-LIBONRISC_VERSION = 1.8.0
+LIBONRISC_VERSION = 1.8.1
 LIBONRISC_SITE = $(call github,visionsystemsgmbh,libonrisc,$(LIBONRISC_VERSION))
 LIBONRISC_DEPENDENCIES = libsoc host-pkgconf
 LIBONRISC_INSTALL_STAGING = YES
